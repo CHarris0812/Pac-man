@@ -1,6 +1,4 @@
-# board.py
-import time
-import random
+import pygame
 
 # Read the given text file and return it as a list of strings
 def makeBoard(file="initialBoard.txt"):
@@ -106,7 +104,7 @@ def findPossibleDirections(board, tile):
     return possible
 
 # Find the distance after moving
-def newDistance(board, startTile, direction, endTile):
+def newDistance(startTile, direction, endTile):
     x, y = startTile
     if direction == "left":
         x -= 1
@@ -165,3 +163,39 @@ def closestPoint(board, location, symbols):
                     minLoc = (j, i)
 
     return minLoc
+
+#Draw the board
+def drawBoard(board, tile, tileSize, window):
+    wallColor = (0, 0, 255)#Blue
+    emptyColor = (0, 0, 0)#Black
+    dotColor = (211, 211, 211)#Gray
+    offScreenColor = (0, 0, 0)#Black
+    ghostEntranceColor = (255, 192, 203)#Pink
+    tunnelColor = (0, 0, 0)#Black
+    intersectionWithDotColor = (0, 255, 0)#Green
+    intersectionWithoutDotColor = (255, 0, 255)#Purple
+    superPelletColor = (0, 255, 255)#Teal
+    
+    for row in range(len(board)):
+        for item in range(len(board[0])):
+            tile.center = (tileSize // 2 + item * tileSize, tileSize // 2 + row * tileSize)
+            if board[row][item] == "%":#Wall
+                pygame.draw.rect(window, wallColor, tile)
+            elif board[row][item] == ".":#Dot
+                pygame.draw.rect(window, dotColor, tile)
+            elif board[row][item] == "0":#Empty
+                pygame.draw.rect(window, emptyColor, tile)
+            elif board[row][item] == "-":#Above or below screen
+                pygame.draw.rect(window, offScreenColor, tile)
+            elif board[row][item] == "G":#Ghost entrance
+                pygame.draw.rect(window, ghostEntranceColor, tile)
+            elif board[row][item] == "X":#Tunnel
+                pygame.draw.rect(window, tunnelColor, tile)
+            elif board[row][item] == "I":#Intersection with dot
+                pygame.draw.rect(window, intersectionWithDotColor, tile)
+            elif board[row][item] == "i":#Intersection without dot
+                pygame.draw.rect(window, intersectionWithoutDotColor, tile)
+            elif board[row][item] == "+":#Super pellet
+                pygame.draw.rect(window, superPelletColor, tile)
+            else:
+                pass

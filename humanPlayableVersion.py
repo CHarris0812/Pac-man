@@ -22,7 +22,7 @@ def getNewDirection(board, location, direction, target, oppositeDirections):
     #Find distance from each direction
     distances = []
     for i in possibleDirections:
-        distances.append(newDistance(board, location, i, target))
+        distances.append(newDistance(location, i, target))
 
     #Set direction to that
     index = distances.index(min(distances))
@@ -85,15 +85,6 @@ def run():
     ghosts = ["blinky", "pinky", "inky", "clyde"]
 
     pacmanColor = (255, 255, 0)#Yellow
-    wallColor = (0, 0, 255)#Blue
-    emptyColor = (0, 0, 0)#Black
-    dotColor = (211, 211, 211)#Gray
-    offScreenColor = (0, 0, 0)#Black
-    ghostEntranceColor = (255, 192, 203)#Pink
-    tunnelColor = (0, 0, 0)#Black
-    intersectionWithDotColor = (0, 255, 0)#Green
-    intersectionWithoutDotColor = (255, 0, 255)#Purple
-    superPelletColor = (0, 255, 255)#Teal
     edibleGhostColor = (255, 255, 255)#White
     textColor = (255, 255, 255)#White
     ghostColors = {"blinky":(255, 0, 0), "pinky":(255, 184, 255), "inky":(0, 255, 255), "clyde":(255, 184, 82)}
@@ -171,14 +162,7 @@ def run():
     score = 0
     pelletsEaten = 0
 
-    blinkyDirection = "left"
     blinkySpeedUp = 0
-
-    pinkyDirection = "left"
-
-    inkyDirection = "left"
-
-    clydeDirection = "left"
 
     chaseMode = True
     cycle = 0
@@ -189,7 +173,6 @@ def run():
     superPelletStartTime = -1
     eatenGhosts = []
 
-    dummyCounter = 0
     globalCounter = 0
     pinkyCounter = 0
     inkyCounter = 0
@@ -279,6 +262,8 @@ def run():
         #Make the window white
         window.fill((255, 255, 255))
 
+        drawBoard(board, tile, tileSize, window)
+        '''
         #Draw the board
         for row in range(len(board)):
             for item in range(len(board[0])):
@@ -303,7 +288,7 @@ def run():
                     pygame.draw.rect(window, superPelletColor, tile)
                 else:
                     pass
-
+        '''
 
         #Display score
         scoreText = font.render("Score: " + str(score), True, textColor)
