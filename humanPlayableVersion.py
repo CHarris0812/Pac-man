@@ -3,10 +3,11 @@
 import pygame
 import time
 import random
-from AI import TestAI
 import torch
 
+from ghosts import Ghost
 from boardUtils import *
+from AI import TestAI
 
 pygame.init()
 
@@ -187,6 +188,11 @@ def run():
     fruitActive = False
 
     releasedGhosts = []
+
+    blinky = Ghost("blinky", startPos=startPositions["blinky"], scatterTile=scatterTiles["blinky"], size=ghostSize, speed=ghostSpeed, direction="left")
+    blinky = Ghost("pinky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
+    blinky = Ghost("inky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
+    blinky = Ghost("clyde", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
 
     time.sleep(5)
     ghostDirections = {ghost:"left" for ghost in ghosts}
