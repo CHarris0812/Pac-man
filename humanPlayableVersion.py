@@ -81,6 +81,36 @@ def findClydeTarget(newClydeLocation, pacmanTile, clydeScatterTile):
         clydeTarget = clydeScatterTile
     return clydeTarget
 
+def displayWindow(window, board, tile, tileSize, font, score, textColor, lives):
+    #Make the window white
+    window.fill((255, 255, 255))
+
+    drawBoard(board, tile, tileSize, window)
+
+    #Display score
+    scoreText = font.render("Score: " + str(score), True, textColor)
+    scoreRect = scoreText.get_rect()
+    scoreRect.topleft = (0, 0)
+    window.blit(scoreText, scoreRect)
+
+    #Display lives
+    livesText = font.render("Lives: " + str(lives), True, textColor)
+    livesRect = livesText.get_rect()
+    livesRect.topleft = (200, 0)
+    window.blit(livesText, livesRect)
+
+#Teleport either right or left. Return new tile as well as new center
+def teleport(currentDirection, currentTile, currentCenter, tileSize):
+    if currentTile == (0, 17) and currentDirection == "left": #Left teleport
+        newTile = (27, 17)
+        newCenter = findCenter(newTile, tileSize)
+        return newTile, newCenter
+    elif currentTile == (27, 17) and currentDirection == "right": #Right teleport
+        newTile = (0, 17)
+        newCenter = findCenter(newTile, tileSize)
+        return newTile, newCenter
+    else:
+        return currentTile, currentCenter
 
 def run():
     ghosts = ["blinky", "pinky", "inky", "clyde"]
@@ -189,17 +219,17 @@ def run():
 
     releasedGhosts = []
 
-    blinky = Ghost("blinky", startPos=startPositions["blinky"], scatterTile=scatterTiles["blinky"], size=ghostSize, speed=ghostSpeed, direction="left")
-    blinky = Ghost("pinky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
-    blinky = Ghost("inky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
-    blinky = Ghost("clyde", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
+    #blinky = Ghost("blinky", startPos=startPositions["blinky"], scatterTile=scatterTiles["blinky"], size=ghostSize, speed=ghostSpeed)
+    #pinky = Ghost("pinky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
+    #inky = Ghost("inky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
+    #clyde = Ghost("clyde", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=14, speed=7.5)
 
     time.sleep(5)
     ghostDirections = {ghost:"left" for ghost in ghosts}
     ghostTargets = {ghost:(0, 0) for ghost in ghosts}
     newGhostLocations = {ghost:(0, 0) for ghost in ghosts}
     ghostTiles = {ghost:(0, 0) for ghost in ghosts}
-    while lives > 0:
+    while lives > 0 and running:
         if lastInput == "":#Just died or starting out
             releasedGhosts = []
 
@@ -265,48 +295,7 @@ def run():
             if time.time() - superPelletStartTime > superPelletLength:
                 superPelletMode = False
 
-        #Make the window white
-        window.fill((255, 255, 255))
-
-        drawBoard(board, tile, tileSize, window)
-        '''
-        #Draw the board
-        for row in range(len(board)):
-            for item in range(len(board[0])):
-                tile.center = (tileSize // 2 + item * tileSize, tileSize // 2 + row * tileSize)
-                if board[row][item] == "%":#Wall
-                    pygame.draw.rect(window, wallColor, tile)
-                elif board[row][item] == ".":#Dot
-                    pygame.draw.rect(window, dotColor, tile)
-                elif board[row][item] == "0":#Empty
-                    pygame.draw.rect(window, emptyColor, tile)
-                elif board[row][item] == "-":#Above or below screen
-                    pygame.draw.rect(window, offScreenColor, tile)
-                elif board[row][item] == "G":#Ghost entrance
-                    pygame.draw.rect(window, ghostEntranceColor, tile)
-                elif board[row][item] == "X":#Tunnel
-                    pygame.draw.rect(window, tunnelColor, tile)
-                elif board[row][item] == "I":#Intersection with dot
-                    pygame.draw.rect(window, intersectionWithDotColor, tile)
-                elif board[row][item] == "i":#Intersection without dot
-                    pygame.draw.rect(window, intersectionWithoutDotColor, tile)
-                elif board[row][item] == "+":#Super pellet
-                    pygame.draw.rect(window, superPelletColor, tile)
-                else:
-                    pass
-        '''
-
-        #Display score
-        scoreText = font.render("Score: " + str(score), True, textColor)
-        scoreRect = scoreText.get_rect()
-        scoreRect.topleft = (0, 0)
-        window.blit(scoreText, scoreRect)
-
-        #Display lives
-        livesText = font.render("Lives: " + str(lives), True, textColor)
-        livesRect = livesText.get_rect()
-        livesRect.topleft = (200, 0)
-        window.blit(livesText, livesRect)
+        displayWindow(window, board, tile, tileSize, font, score, textColor, lives)
 
         #Start moving
         if currentDirection == "" and lastInput != "":
@@ -332,14 +321,7 @@ def run():
         #Teleport pads for pacman
         pacmanTile = findTile(newPacmanLocation, tileSize)
         if board[pacmanTile[1]][pacmanTile[0]] == "X": #On teleport
-            if pacmanTile == (0, 17): #Left teleport
-                if currentDirection == "left": #Moving left
-                    pacmanTile = (27, 17)
-                    pacman.center = findCenter(pacmanTile, tileSize)
-            elif pacmanTile == (27, 17): #Right teleport
-                if currentDirection == "right":
-                    pacmanTile = (0, 17)
-                    pacman.center = findCenter(pacmanTile, tileSize)
+            pacmanTile, pacman.center = teleport(currentDirection, pacmanTile, pacman.center, tileSize)
 
         #Update tiles based on pacmans position
         pacmanTile = findTile(pacman.center, tileSize)
@@ -498,14 +480,7 @@ def run():
         #Teleport pads
         for ghost in releasedGhosts:
             if board[ghostTiles[ghost][1]][ghostTiles[ghost][0]] == "X": #On teleport
-                if ghostTiles[ghost] == (0, 17): #Left teleport
-                    if ghostDirections[ghost] == "left": #Moving left
-                        ghostTiles[ghost] = (27, 17)
-                        eval(ghost).center = findCenter(ghostTiles[ghost], tileSize)
-                elif ghostTiles[ghost] == (27, 17): #Right teleport
-                    if ghostDirections[ghost] == "right": #Moving right
-                        ghostTiles[ghost] = (0, 17)
-                        eval(ghost).center = findCenter(ghostTiles[ghost], tileSize)
+                ghostTiles[ghost], eval(ghost).center = teleport(ghostDirections[ghost], ghostTiles[ghost], eval(ghost).center, tileSize)
 
         #Update tile
         for ghost in releasedGhosts:

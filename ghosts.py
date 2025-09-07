@@ -1,4 +1,4 @@
-
+from boardUtils import findTile
 
 class Ghost:
     def __init__(self, name, startPos, scatterTile, size, speed):
