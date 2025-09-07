@@ -112,6 +112,45 @@ def teleport(currentDirection, currentTile, currentCenter, tileSize):
     else:
         return currentTile, currentCenter
 
+#Initialize pacman and the ghosts
+def initializeSprites(pacmanSize, pacmanStartPosition, ghostSize, startPositions):
+    #Initialize pacman
+    pacman = pygame.Rect(0, 0, pacmanSize, pacmanSize)
+    pacman.center = pacmanStartPosition
+
+    #Initialize red ghost
+    blinky = pygame.Rect(0, 0, ghostSize, ghostSize)
+    blinky.center = startPositions["blinky"]
+
+    #Initialize pink ghost
+    pinky = pygame.Rect(0, 0, ghostSize, ghostSize)
+    pinky.center = startPositions["pinky"]
+
+    #Initialize teal ghost
+    inky = pygame.Rect(0, 0, ghostSize, ghostSize)
+    inky.center = startPositions["inky"]
+
+    #Initialize pink ghost
+    clyde = pygame.Rect(0, 0, ghostSize, ghostSize)
+    clyde.center = startPositions["clyde"]
+
+    return pacman, blinky, pinky, inky, clyde
+
+def handleInput(lastInput, running):
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP or event.key == pygame.K_w:
+                lastInput = "up"
+            elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                lastInput = "down"
+            elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                lastInput = "left"
+            elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                lastInput = "right"
+    return lastInput, running
+
 def run():
     ghosts = ["blinky", "pinky", "inky", "clyde"]
 
@@ -155,25 +194,7 @@ def run():
     window = pygame.display.set_mode(window_size)
     pygame.display.set_caption("Pac-Man")
 
-    #Initialize pacman
-    pacman = pygame.Rect(0, 0, pacmanSize, pacmanSize)
-    pacman.center = pacmanStartPosition
-
-    #Initialize red ghost
-    blinky = pygame.Rect(0, 0, ghostSize, ghostSize)
-    blinky.center = startPositions["blinky"]
-
-    #Initialize pink ghost
-    pinky = pygame.Rect(0, 0, ghostSize, ghostSize)
-    pinky.center = startPositions["pinky"]
-
-    #Initialize teal ghost
-    inky = pygame.Rect(0, 0, ghostSize, ghostSize)
-    inky.center = startPositions["inky"]
-
-    #Initialize pink ghost
-    clyde = pygame.Rect(0, 0, ghostSize, ghostSize)
-    clyde.center = startPositions["clyde"]
+    pacman, blinky, pinky, inky, clyde = initializeSprites(pacmanSize, pacmanStartPosition, ghostSize, startPositions)
 
     #Initialize the clock
     clock = pygame.time.Clock()
@@ -270,18 +291,7 @@ def run():
 
         else:
             #Check for events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
-                        lastInput = "up"
-                    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                        lastInput = "down"
-                    elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                        lastInput = "left"
-                    elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                        lastInput = "right"
+            lastInput, running = handleInput(lastInput, running)
 
         #Switch between chase and scatter modes
         tempChaseMode = shouldSwitchModes(cycle, timeSinceCycleStart, chaseMode, chaseTimes, scatterTimes)
@@ -502,7 +512,6 @@ def run():
                     lastInput = ""
                     globalCounter = 0
                     superPelletMode = False
-                    justDied = True
 
         #Add pacman
         pygame.draw.rect(window, pacmanColor, pacman)
