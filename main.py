@@ -5,7 +5,7 @@ import time
 import random
 import torch
 
-from ghosts import Ghost
+from ghost import Ghost
 from boardUtils import *
 from AI import TestAI
 
@@ -161,7 +161,6 @@ def run():
 
     superPelletMode = False
     superPelletStartTime = -1
-    eatenGhosts = []
 
     globalCounter = 0
 
@@ -169,10 +168,10 @@ def run():
 
     fruitActive = False
 
-    blinky = Ghost("blinky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=ghostSize, speed=ghostSpeed, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=0, color=(255, 0, 0))
-    pinky = Ghost("pinky", startPos=(tileSize * 14, tileSize * 17.5), scatterTile=(2, 0), size=14, speed=7.5, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=0, color=(255, 184, 255))
-    inky = Ghost("inky", startPos=(tileSize * 12, tileSize * 17.5), scatterTile=(27, 35), size=14, speed=7.5, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=30, color=(0, 255, 255))
-    clyde = Ghost("clyde", startPos=(tileSize * 16, tileSize * 17.5), scatterTile=(0, 35), size=14, speed=7.5, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=60, color=(255, 184, 82))
+    blinky = Ghost("blinky", startPos=(tileSize * 14, tileSize * 14.5), scatterTile=(25, 0), size=ghostSize, speed=ghostSpeed, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=0, color=(255, 0, 0), tileSize=tileSize)
+    pinky = Ghost("pinky", startPos=(tileSize * 14, tileSize * 17.5), scatterTile=(2, 0), size=14, speed=7.5, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=0, color=(255, 184, 255), tileSize=tileSize)
+    inky = Ghost("inky", startPos=(tileSize * 12, tileSize * 17.5), scatterTile=(27, 35), size=14, speed=7.5, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=30, color=(0, 255, 255), tileSize=tileSize)
+    clyde = Ghost("clyde", startPos=(tileSize * 16, tileSize * 17.5), scatterTile=(0, 35), size=14, speed=7.5, releaseLocation=(tileSize * 14, tileSize * 14.5), releaseCounter=0, releaseThreshold=60, color=(255, 184, 82), tileSize=tileSize)
 
     ghosts = [blinky, pinky, inky, clyde]
 
@@ -189,8 +188,7 @@ def run():
             pacman.center = pacmanStartPosition
 
             for ghost in ghosts:
-                ghost.center = ghost.startPos
-                ghost.tile = findTile(ghost.center, tileSize)
+                ghost.reset()
 
         if not blinky.released: 
             blinky.release()
@@ -204,7 +202,7 @@ def run():
 
             ghostLocations = []
             for ghost in ghosts:
-                ghostLocations.append(findTile(ghost.center, tileSize))
+                ghostLocations.append(findTile(ghost.sprite.center, tileSize))
 
             closestPellet = closestPoint(board, pacmanTile, [".", "I"])
             closestSuperPellet = closestPoint(board, pacmanTile, ["+"])
@@ -268,29 +266,12 @@ def run():
         pacmanTile = findTile(pacman.center, tileSize)
     
         #Change dot to empt y
-        if board[pacmanTile[1]][pacmanTile[0]] == ".": #Dot, not intersection
-            board[pacmanTile[1]] = board[pacmanTile[1]][:pacmanTile[0]] + "0" + board[pacmanTile[1]][pacmanTile[0] + 1:]
-            score += 1
-            pelletsEaten += 1
-            if 244 - pelletsEaten in speedUpThresholds:
-                blinkySpeedUp += 1
-            if lives == initialLives:
-                for ghost in ghosts:
-                    if not ghost.released:
-                        ghost.releaseCounter += 1
-                        if ghost.releaseCounter >= ghost.releaseThreshold:
-                            ghost.release()
+        if board[pacmanTile[1]][pacmanTile[0]] in [".", "I"]: #Dot
+            if board[pacmanTile[1]][pacmanTile[0]] == ".":
+                board[pacmanTile[1]] = board[pacmanTile[1]][:pacmanTile[0]] + "0" + board[pacmanTile[1]][pacmanTile[0] + 1:]
             else:
-                globalCounter += 1
-                if globalCounter in releaseThresholds:
-                    for ghost in ghosts:
-                        if not ghost.released:
-                            ghost.release()
-                            break                
+                board[pacmanTile[1]] = board[pacmanTile[1]][:pacmanTile[0]] + "i" + board[pacmanTile[1]][pacmanTile[0] + 1:]
 
-
-        elif board[pacmanTile[1]][pacmanTile[0]] == "I": #Dot, intersection
-            board[pacmanTile[1]] = board[pacmanTile[1]][:pacmanTile[0]] + "i" + board[pacmanTile[1]][pacmanTile[0] + 1:]
             score += 1
             pelletsEaten += 1
             if 244 - pelletsEaten in speedUpThresholds:
@@ -309,7 +290,6 @@ def run():
                             ghost.release()
                             break
 
-
         elif board[pacmanTile[1]][pacmanTile[0]] == "+": #Super pellet
             board[pacmanTile[1]] = board[pacmanTile[1]][:pacmanTile[0]] + "0" + board[pacmanTile[1]][pacmanTile[0] + 1:]
             superPelletMode = True
@@ -318,7 +298,10 @@ def run():
             pelletsEaten += 1
             if 244 - pelletsEaten in speedUpThresholds:
                 blinkySpeedUp += 1
-            eatenGhosts = []
+
+            for ghost in ghosts:
+                ghost.eaten = False
+
             justSwitched = True
             if lives == initialLives:
                 for ghost in ghosts:
@@ -338,7 +321,7 @@ def run():
             if not ghost.released: continue
 
             #Find ghosts new location
-            ghost.newLocation = ghost.center
+            ghost.newLocation = ghost.sprite.center
 
             if currentDirection != "":#Started
 
@@ -362,55 +345,42 @@ def run():
                 else:
                     speed = ghostSpeed * tileSize / framerate
                 
-                if willPassCenter(ghost.center, ghost.direction, speed, tileSize):
+                if willPassCenter(ghost.sprite.center, ghost.direction, speed, tileSize):
                     #Get new direction
                     ghost.direction = getNewDirection(board, ghost.tile, ghost.direction, ghost.target, oppositeDirections)
 
                     #Center ghost on tile
-                    ghost.center = findCenter(ghost.tile, tileSize)
+                    ghost.sprite.center = findCenter(ghost.tile, tileSize)
 
 
-                ghost.newLocation = getNewObjectLocation(ghost.center, ghost.direction, speed, tileSize)
+                ghost.newLocation = getNewObjectLocation(ghost.sprite.center, ghost.direction, speed, tileSize)
         justSwitched = False
         
         #Dont walk through walls
         for ghost in ghosts:
-            if not ghost.released:
-                continue
-
             ghost.newLocation = getLegalLocation(board, ghost.newLocation, tileSize, ghostSize)
-            ghost.center = ghost.newLocation
-            ghost.tile = findTile(ghost.center, tileSize)
+            ghost.sprite.center = ghost.newLocation
+            ghost.tile = findTile(ghost.sprite.center, tileSize)
 
         #Teleport pads
         for ghost in ghosts:
-            if not ghost.released:
-                continue
-            
             if board[ghost.tile[1]][ghost.tile[0]] == "X": #On teleport
-                ghost.tile, ghost.center = teleport(ghost.direction, ghost.tile, ghost.center, tileSize)
+                ghost.teleport()
 
         #Update tile
         for ghost in ghosts:
-            if not ghost.released:
-                continue
-            
-            ghost.tile = findTile(ghost.center, tileSize)
+            ghost.tile = findTile(ghost.sprite.center, tileSize)
 
         #Check if pacman or ghosts are touching
         for ghost in ghosts:
-            if not ghost.released:
-                continue
-            
             if pacmanTile == ghost.tile:
-                if superPelletMode and ghost not in eatenGhosts:
+                if superPelletMode and not ghost.eaten:
                     #Eat ghosts
                     score += 100
-                    eatenGhosts.append(ghost)
+                    ghost.eaten = True
             
                     #Reset ghost
-                    ghost.center = (tileSize * 14, tileSize * 14.5)
-                    ghost.tile = findTile(ghost.center, tileSize)
+                    ghost.release()
                 else:
                     lives -= 1
                     lastInput = ""
@@ -422,7 +392,7 @@ def run():
 
         #Add ghosts
         for ghost in ghosts:
-            if superPelletMode and ghost not in eatenGhosts:
+            if superPelletMode and not ghost.eaten:
                 ghost.draw(window, edibleGhostColor)
             else:
                 ghost.draw(window, ghost.color)
