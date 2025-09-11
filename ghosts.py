@@ -1,7 +1,9 @@
+import pygame
+
 from boardUtils import findTile
 
 class Ghost:
-    def __init__(self, name, startPos, scatterTile, size, speed):
+    def __init__(self, name, startPos, scatterTile, size, speed, releaseLocation, releaseCounter, releaseThreshold, color):
         self.name = name
         self.center = startPos
         self.scatterTile = scatterTile
@@ -12,16 +14,24 @@ class Ghost:
         self.tile = findTile(self.center, size)
         self.released = False
         self.eaten = False
+        self.sprite = pygame.Rect(0, 0, size, size)
+        self.newLocation = self.center
+        self.releaseLocation = releaseLocation
+        self.released = False
+        self.releaseCounter = releaseCounter
+        self.releaseThreshold = releaseThreshold
+        self.startPos = startPos
+        self.color = color
 
     def update_tile(self):
         pass
 
-    def choose_target(self, chaseMode, pacmanTile, blinkyTile):
+    def chooseTarget(self, chaseMode, pacmanTile, blinkyTile):
         if not chaseMode: return self.scatterTile
         elif self.name == "pinky": return self.pinkyTarget(pacmanTile)
         elif self.name == "inky": return self.inkyTarget(pacmanTile, blinkyTile)
         elif self.name == "clyde": return self.clydeTarget(pacmanTile)
-        else: return self.blinkyTarget()
+        else: return self.blinkyTarget(pacmanTile)
 
     def pinkyTarget(self, pacmanTile):
         if self.direction == "left":
@@ -59,5 +69,14 @@ class Ghost:
     def blinkyTarget(self, pacmanTile):
         return pacmanTile
 
+    def release(self):
+        self.center = self.releaseLocation
+        self.released = True
+
     def move(self, board, opposite_directions, mode):
         pass
+
+    def draw(self, window, color):
+        self.sprite.center = self.center
+        pygame.draw.rect(window, color, self.sprite)
+
